@@ -1,0 +1,168 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'kotlin-parcelize'
+    id 'walle'
+    id 'statistic'
+}
+
+android {
+    compileSdkVersion Integer.valueOf(gradle.compileSdkVersion)
+    buildToolsVersion gradle.buildToolsVersion
+
+    defaultConfig {
+        applicationId gradle.applicationId
+        minSdkVersion Integer.valueOf(gradle.minSdkVersion)
+        targetSdkVersion Integer.valueOf(gradle.targetSdkVersion)
+        versionCode Integer.valueOf(gradle.versionCode)
+        versionName gradle.versionName
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += [
+                        "room.schemaLocation"  : "$projectDir/schemas".toString(),
+                        "room.incremental"     : "true",
+                        "room.expandProjection": "true"
+                ]
+            }
+        }
+    }
+
+    signingConfigs {
+        sign {
+            storeFile file("../keystore.key")
+            storePassword "111111"
+            keyAlias "zzzzzz"
+            keyPassword "111111"
+        }
+    }
+
+    buildTypes {
+        release {
+            debuggable false
+            // 启用代码压缩、优化及混淆
+            minifyEnabled true
+            // 启用资源压缩，需配合 minifyEnabled=true 使用
+            shrinkResources true
+            // 指定混淆保留规则
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.sign
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.sign
+            //应用包名添加.debug后缀
+            applicationIdSuffix ".debug"
+            //禁用PNG压缩。
+            crunchPngs false
+            //停用Crashlytics，以提高调试 build 的构建速度
+            ext.enableCrashlytics = false
+        }
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kapt {
+        generateStubs = true
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    dexOptions {
+        // 声明是否对依赖的库进行 dex 预处理来使你的增量构建更快速
+        preDexLibraries true
+        // 设置最大的线程数量使用当运行 dex-in-process 时,默认值是 4
+        maxProcessCount 8
+    }
+}
+
+kapt {
+    useBuildCache = true
+    // 增加注解处理器的最大错误次数,默认为 100。
+    javacOptions {
+        option("-Xmaxerrs", 500)
+    }
+}
+
+walle {
+    // 指定渠道包的输出路径
+    apkOutputFolder = new File("${project.buildDir}/outputs/channels")
+    // 定制渠道包的APK的文件名称
+    apkFileNameFormat = '${appName}-${packageName}-${channel}-${buildType}-v${versionName}-${versionCode}-${buildTime}.apk'
+    // 渠道配置文件
+    channelFile = new File("${project.getProjectDir()}/channel")
+}
+
+dependencies {
+    implementation project(path: ':module_home')
+    implementation project(path: ':module_navigation')
+    implementation project(path: ':module_faq')
+    implementation project(path: ':module_system')
+    implementation project(path: ':module_project')
+    implementation project(path: ':module_user')
+    implementation rootProject.ext.dependencies["meituan-walle"]
+}
+
+statistic {
+    buryPoint = [
+            [
+                    //采集数据的方法的路径
+                    'agentOwner' : 'com/example/fragment/library/common/utils/StatisticHelper',
+                    //采集数据的方法名
+                    'agentName'  : 'viewOnClick',
+                    //采集数据的方法描述（参数应在methodDesc范围之内）
+                    'agentDesc'  : '(Landroid/view/View;)V',
+                    //插入的方法的实现接口
+                    'methodOwner': 'Landroid/view/View$OnClickListener;',
+                    //插入的方法名
+                    'methodName' : 'onClick',
+                    //插入的方法描述
+                    'methodDesc' : '(Landroid/view/View;)V',
+            ],
+            [
+                    //注解标识
+                    'isAnnotation'    : true,
+                    //方式插入时机，true方法退出前，false方法进入时
+                    'isMethodExit'    : true,
+                    //采集数据的方法的路径
+                    'agentOwner'      : 'com/example/fragment/library/common/utils/StatisticHelper',
+                    //采集数据的方法名
+                    'agentName'       : 'testAnnotation',
+                    //采集数据的方法描述（对照annotationParams，注意参数顺序）
+                    'agentDesc'       : '(Ljava/lang/Object;ILjava/lang/String;)V',
+                    //扫描的注解名称
+                    'annotationDesc'  : 'Lcom/example/fragment/library/common/utils/TestAnnotation;',
+                    //扫描的注解的参数
+                    'annotationParams': [
+                            //参数名 : 参数类型（对应的ASM指令，加载不同类型的参数需要不同的指令）
+                            //this  : 所在方法的当前对象的引用（默认关键字，按需可选配置）
+                            'this'   : 'Ljava/lang/Object;',
+                            'code'   : 'I',
+                            'message': 'Ljava/lang/String;',
+                    ]
+            ],
+    ]
+    methodTimer = [
+            [
+                    'time'  : 50L,
+                    'owner': 'com/example/fragment',
+            ],
+            [
+                    'time'  : 500L,
+                    'owner': 'com/google',
+            ]
+    ]
+}
