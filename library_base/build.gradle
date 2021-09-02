@@ -61,6 +61,18 @@ dependencies {
     annotationProcessor rootProject.ext.dependencies["bumptech-glide-compiler"]
     api rootProject.ext.dependencies["tencent-tbs"]
 
+    api rootProject.ext.dependencies["retrofit-converter-gson"]
+    api rootProject.ext.dependencies["retrofit-adapter-rxjava2"]
+    api rootProject.ext.dependencies["lifecycle_runtime"]
+    api rootProject.ext.dependencies["lifecycle_viewmodel"]
+    api rootProject.ext.dependencies["rxandroid2"]
+    api rootProject.ext.dependencies["rxjava2"]
+
+
+
+
+
+
     api 'junit:junit:4.13'
     api 'androidx.test.ext:junit:1.1.2'
     api 'androidx.test.espresso:espresso-core:3.3.0'
